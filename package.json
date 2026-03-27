@@ -1,10 +1,15 @@
 {
   "name": "ai-ready",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Score your repo's AI-readiness and auto-generate config files for Claude Code, Cursor, and GitHub Copilot",
   "main": "src/index.js",
+  "bin": {
+    "ai-ready": "src/index.js"
+  },
   "scripts": {
     "start": "node src/index.js",
+    "outreach": "node src/outreach.js",
+    "outreach:dry": "DRY_RUN=true node src/outreach.js",
     "test": "node src/test.js"
   },
   "keywords": [

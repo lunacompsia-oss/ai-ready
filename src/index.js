@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const path = require('path');
 const fs = require('fs');
 const { scanRepo } = require('./scanner');
@@ -210,4 +212,10 @@ function printReport(result) {
   console.log('');
 }
 
-run();
+// Export for use by outreach.js and other scripts
+module.exports = { execute };
+
+// Run if called directly
+if (require.main === module) {
+  run();
+}
