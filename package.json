@@ -1,6 +1,6 @@
 {
   "name": "ai-ready",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Score your repo's AI-readiness and auto-generate config files for Claude Code, Cursor, and GitHub Copilot",
   "main": "src/index.js",
   "scripts": {

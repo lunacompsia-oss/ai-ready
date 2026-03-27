@@ -4,7 +4,7 @@
 [![GitHub Action](https://img.shields.io/badge/GitHub%20Action-Marketplace-blue?style=flat&logo=github)](https://github.com/M3phist0s/ai-ready)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-**Score your repo's AI-readiness and auto-generate config files for Claude Code, Cursor, and GitHub Copilot.**
+**Score your repo's AI-readiness and auto-generate config files for Claude Code, Cursor, Windsurf, and GitHub Copilot.**
 
 Like Lighthouse for web performance, but for AI coding tools. Get a 0-100 score showing how well AI assistants can work with your codebase, plus auto-generated config files to close the gap.
 
@@ -15,8 +15,10 @@ Like Lighthouse for web performance, but for AI coding tools. Get a 0-100 score 
 3. **Generates** missing config files tailored to your specific codebase:
    - `CLAUDE.md` — Claude Code project instructions
    - `.cursorrules` — Cursor AI rules
+   - `.windsurfrules` — Windsurf AI rules
    - `.github/copilot-instructions.md` — GitHub Copilot instructions
-4. **Adds a badge** to show your repo's AI-readiness score
+4. **Creates a PR** (optional) with the generated configs — zero manual work
+5. **Adds a badge** to show your repo's AI-readiness score
 
 ## Quick Start
 
@@ -40,6 +42,29 @@ jobs:
         with:
           mode: full        # 'score', 'generate', or 'full'
           badge: true       # Add badge to README
+```
+
+### Auto-Create PR with Configs
+
+```yaml
+name: AI Ready
+on:
+  workflow_dispatch:  # Run manually or on schedule
+
+jobs:
+  ai-ready:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: M3phist0s/ai-ready@v1
+        with:
+          mode: full
+          create-pr: true   # Auto-creates a PR with generated configs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ### CLI
@@ -89,6 +114,7 @@ Unlike generic templates, AI Ready analyzes your actual codebase:
 - Reads your **package.json** scripts to document build/test/lint commands
 - Maps your **directory structure** so AI knows where things are
 - Checks your **existing configs** and only generates what's missing
+- Supports **4 AI tools**: Claude Code, Cursor, Windsurf, and GitHub Copilot
 
 ## Supported Languages
 
@@ -105,7 +131,7 @@ Next.js, Nuxt, SvelteKit, Astro, Vite, Webpack, Angular, Remix, Tailwind CSS, Pr
 | `mode` | `full` | `score` (report only), `generate` (create configs), `full` (both) |
 | `output-dir` | `.` | Where to write generated config files |
 | `badge` | `true` | Add AI-Ready badge to README |
-| `create-pr` | `false` | Create a PR with generated configs |
+| `create-pr` | `false` | Create a PR with generated configs (requires `GITHUB_TOKEN`) |
 
 ## Action Outputs
 
@@ -115,6 +141,7 @@ Next.js, Nuxt, SvelteKit, Astro, Vite, Webpack, Angular, Remix, Tailwind CSS, Pr
 | `grade` | Letter grade (A/B/C/D/F) |
 | `report` | Full JSON report |
 | `files-generated` | Comma-separated list of generated files |
+| `pr-url` | URL of created PR (only when `create-pr: true`) |
 
 ## Example Output
 

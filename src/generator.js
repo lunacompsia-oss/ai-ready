@@ -344,6 +344,11 @@ function generateBadgeMarkdown(score) {
   return `[![AI Ready](https://img.shields.io/badge/AI%20Ready-${score}%25%20${grade}-${color}?style=flat&logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xMiAyQzYuNDggMiAyIDYuNDggMiAxMnM0LjQ4IDEwIDEwIDEwIDEwLTQuNDggMTAtMTBTMTcuNTIgMiAxMiAyem0wIDE4Yy00LjQyIDAtOC0zLjU4LTgtOHMzLjU4LTggOC04IDggMy41OCA4IDgtMy41OCA4LTggOHptLTEtNGgybC0uNS0yaDFsLjUtMmgtNGwuNSAyaDFMLDExIDh6Ii8+PC9zdmc+)](https://github.com/M3phist0s/ai-ready)`;
 }
 
+function generateWindsurfRules(scan, score) {
+  // Windsurf uses the same format as .cursorrules
+  return generateCursorRules(scan, score);
+}
+
 function generateConfigs(scan, score, outputDir) {
   const generated = [];
 
@@ -363,6 +368,14 @@ function generateConfigs(scan, score, outputDir) {
     generated.push('.cursorrules');
   }
 
+  // Generate .windsurfrules
+  const windsurfRules = generateWindsurfRules(scan, score);
+  const windsurfPath = path.join(outputDir, '.windsurfrules');
+  if (!fs.existsSync(windsurfPath)) {
+    fs.writeFileSync(windsurfPath, windsurfRules);
+    generated.push('.windsurfrules');
+  }
+
   // Generate .github/copilot-instructions.md
   const copilotInstructions = generateCopilotInstructions(scan, score);
   const copilotDir = path.join(outputDir, '.github');
@@ -379,6 +392,7 @@ function generateConfigs(scan, score, outputDir) {
 module.exports = {
   generateClaudeMd,
   generateCursorRules,
+  generateWindsurfRules,
   generateCopilotInstructions,
   generateConfigs,
   generateBadgeMarkdown,

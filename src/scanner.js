@@ -40,7 +40,7 @@ const CI_PATTERNS = [
 
 const AI_CONFIG_FILES = [
   'CLAUDE.md', '.claude/CLAUDE.md', '.cursorrules', '.cursorignore',
-  '.github/copilot-instructions.md', '.aider.conf.yml',
+  '.windsurfrules', '.github/copilot-instructions.md', '.aider.conf.yml',
   'coderabbit.yaml', '.coderabbit.yaml', '.devin',
 ];
 
