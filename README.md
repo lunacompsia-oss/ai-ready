@@ -1,10 +1,12 @@
 # AI Ready
 
-[![AI Ready](https://img.shields.io/badge/AI%20Ready-Score%20Your%20Repo-purple?style=flat&logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xMiAyQzYuNDggMiAyIDYuNDggMiAxMnM0LjQ4IDEwIDEwIDEwIDEwLTQuNDggMTAtMTBTMTcuNTIgMiAxMiAyem0wIDE4Yy00LjQyIDAtOC0zLjU4LTgtOHMzLjU4LTggOC04IDggMy41OCA4IDgtMy41OCA0LTggOHptLTEtNGgybC0uNS0yaDFsLjUtMmgtNGwuNSAyaDFMLDExIDh6Ii8+PC9zdmc+)](https://github.com/M3phist0s/ai-ready)
-[![GitHub Action](https://img.shields.io/badge/GitHub%20Action-Marketplace-blue?style=flat&logo=github)](https://github.com/M3phist0s/ai-ready)
+[![AI Ready](https://img.shields.io/badge/AI%20Ready-Score%20Your%20Repo-purple?style=flat&logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xMiAyQzYuNDggMiAyIDYuNDggMiAxMnM0LjQ4IDEwIDEwIDEwIDEwLTQuNDggMTAtMTBTMTcuNTIgMiAxMiAyem0wIDE4Yy00LjQyIDAtOC0zLjU4LTgtOHMzLjU4LTggOC04IDggMy41OCA4IDgtMy41OCA0LTggOHptLTEtNGgybC0uNS0yaDFsLjUtMmgtNGwuNSAyaDFMLDExIDh6Ii8+PC9zdmc+)](https://github.com/lunacompsia-oss/ai-ready)
+[![GitHub Action](https://img.shields.io/badge/GitHub%20Action-Marketplace-blue?style=flat&logo=github)](https://github.com/marketplace/actions/ai-ready)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 **Score your repo's AI-readiness and auto-generate config files for Claude Code, Cursor, Windsurf, and GitHub Copilot.**
+
+**[Try it instantly in your browser →](https://ai-ready-web.pingbase-api.workers.dev)** — paste any GitHub URL, get your score in seconds.
 
 Like Lighthouse for web performance, but for AI coding tools. Get a 0-100 score showing how well AI assistants can work with your codebase, plus auto-generated config files to close the gap.
 
@@ -38,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: M3phist0s/ai-ready@v1
+      - uses: lunacompsia-oss/ai-ready@v1
         with:
           mode: full        # 'score', 'generate', or 'full'
           badge: true       # Add badge to README
@@ -59,7 +61,7 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
-      - uses: M3phist0s/ai-ready@v1
+      - uses: lunacompsia-oss/ai-ready@v1
         with:
           mode: full
           create-pr: true   # Auto-creates a PR with generated configs
