@@ -1,0 +1,385 @@
+const fs = require('fs');
+const path = require('path');
+
+function generateClaudeMd(scan, score) {
+  const lines = [`# ${path.basename(scan.repoPath)}`, ''];
+
+  // Project overview
+  lines.push('## Project Overview');
+  lines.push('');
+  lines.push(`- **Primary Language:** ${scan.primaryLanguage}`);
+  if (scan.frameworks.length) {
+    lines.push(`- **Frameworks:** ${scan.frameworks.join(', ')}`);
+  }
+  if (scan.hasManifest) {
+    lines.push(`- **Package Manager:** ${inferPackageManager(scan)}`);
+  }
+  lines.push('');
+
+  // Project structure
+  lines.push('## Project Structure');
+  lines.push('');
+  lines.push('```');
+  for (const dir of scan.topLevelDirs.slice(0, 15)) {
+    lines.push(`${dir}/`);
+  }
+  lines.push('```');
+  lines.push('');
+
+  // Key commands
+  lines.push('## Key Commands');
+  lines.push('');
+  const commands = inferCommands(scan);
+  for (const [label, cmd] of Object.entries(commands)) {
+    lines.push(`- **${label}:** \`${cmd}\``);
+  }
+  lines.push('');
+
+  // Code style
+  lines.push('## Code Style');
+  lines.push('');
+  const style = inferCodeStyle(scan);
+  for (const rule of style) {
+    lines.push(`- ${rule}`);
+  }
+  lines.push('');
+
+  // Conventions
+  lines.push('## Conventions');
+  lines.push('');
+  const conventions = inferConventions(scan);
+  for (const conv of conventions) {
+    lines.push(`- ${conv}`);
+  }
+  lines.push('');
+
+  // Important notes
+  lines.push('## Important Notes');
+  lines.push('');
+  lines.push('- Read existing code before making changes to understand patterns');
+  lines.push('- Follow the existing project structure and naming conventions');
+  if (scan.hasTests) {
+    lines.push('- Run tests after making changes to verify nothing is broken');
+  }
+  if (scan.hasLinting) {
+    lines.push('- Ensure code passes linting before committing');
+  }
+  if (scan.hasCi) {
+    lines.push('- All changes must pass CI checks');
+  }
+  lines.push('');
+
+  return lines.join('\n');
+}
+
+function generateCursorRules(scan, score) {
+  const lines = [];
+
+  lines.push(`You are working on ${path.basename(scan.repoPath)}, a ${scan.primaryLanguage} project.`);
+  lines.push('');
+
+  if (scan.frameworks.length) {
+    lines.push(`Tech stack: ${scan.frameworks.join(', ')}.`);
+    lines.push('');
+  }
+
+  // Language-specific rules
+  const langRules = getLanguageRules(scan);
+  if (langRules.length) {
+    lines.push('## Code Guidelines');
+    lines.push('');
+    for (const rule of langRules) {
+      lines.push(`- ${rule}`);
+    }
+    lines.push('');
+  }
+
+  // Framework-specific rules
+  const frameworkRules = getFrameworkRules(scan);
+  if (frameworkRules.length) {
+    lines.push('## Framework Patterns');
+    lines.push('');
+    for (const rule of frameworkRules) {
+      lines.push(`- ${rule}`);
+    }
+    lines.push('');
+  }
+
+  // Structure rules
+  lines.push('## Project Structure');
+  lines.push('');
+  lines.push(`Key directories: ${scan.topLevelDirs.slice(0, 8).join(', ')}`);
+  lines.push('');
+
+  // Testing rules
+  if (scan.hasTests) {
+    lines.push('## Testing');
+    lines.push('');
+    lines.push(`- ${scan.testFileCount} test files in the project`);
+    lines.push('- Write tests for new functionality');
+    lines.push('- Follow existing test patterns and naming conventions');
+    lines.push('');
+  }
+
+  // Style rules
+  if (scan.hasLinting) {
+    lines.push('## Style');
+    lines.push('');
+    lines.push('- Follow the existing linter/formatter configuration');
+    lines.push('- Do not disable linting rules without good reason');
+    lines.push('');
+  }
+
+  return lines.join('\n');
+}
+
+function generateCopilotInstructions(scan, score) {
+  const lines = [];
+
+  lines.push(`# GitHub Copilot Instructions for ${path.basename(scan.repoPath)}`);
+  lines.push('');
+  lines.push(`This is a ${scan.primaryLanguage} project${scan.frameworks.length ? ` using ${scan.frameworks.join(', ')}` : ''}.`);
+  lines.push('');
+
+  lines.push('## General Guidelines');
+  lines.push('');
+  lines.push('- Follow existing code patterns and conventions in this repository');
+  lines.push(`- Use ${scan.primaryLanguage} idioms and best practices`);
+  if (scan.hasTypes) {
+    lines.push('- Always include type annotations');
+  }
+  if (scan.hasTests) {
+    lines.push('- Include tests for new functionality');
+  }
+  lines.push('- Keep functions small and focused');
+  lines.push('- Use meaningful variable and function names');
+  lines.push('');
+
+  const langRules = getLanguageRules(scan);
+  if (langRules.length) {
+    lines.push('## Language-Specific');
+    lines.push('');
+    for (const rule of langRules) {
+      lines.push(`- ${rule}`);
+    }
+    lines.push('');
+  }
+
+  if (scan.frameworks.length) {
+    lines.push('## Frameworks');
+    lines.push('');
+    lines.push(`This project uses: ${scan.frameworks.join(', ')}`);
+    lines.push('- Follow framework conventions and patterns');
+    lines.push('- Use framework-provided utilities over custom implementations');
+    lines.push('');
+  }
+
+  return lines.join('\n');
+}
+
+function inferPackageManager(scan) {
+  const hasPnpm = scan.topLevelDirs.includes('pnpm-lock.yaml') || fs.existsSync(path.join(scan.repoPath, 'pnpm-lock.yaml'));
+  const hasYarn = fs.existsSync(path.join(scan.repoPath, 'yarn.lock'));
+  const hasBun = fs.existsSync(path.join(scan.repoPath, 'bun.lockb'));
+  const hasPip = fs.existsSync(path.join(scan.repoPath, 'requirements.txt'));
+  const hasPoetry = fs.existsSync(path.join(scan.repoPath, 'poetry.lock'));
+  const hasUv = fs.existsSync(path.join(scan.repoPath, 'uv.lock'));
+  const hasCargo = fs.existsSync(path.join(scan.repoPath, 'Cargo.lock'));
+
+  if (hasPnpm) return 'pnpm';
+  if (hasYarn) return 'yarn';
+  if (hasBun) return 'bun';
+  if (hasUv) return 'uv';
+  if (hasPoetry) return 'poetry';
+  if (hasPip) return 'pip';
+  if (hasCargo) return 'cargo';
+  if (fs.existsSync(path.join(scan.repoPath, 'package.json'))) return 'npm';
+  if (fs.existsSync(path.join(scan.repoPath, 'go.mod'))) return 'go modules';
+  return 'unknown';
+}
+
+function inferCommands(scan) {
+  const commands = {};
+  const pm = inferPackageManager(scan);
+
+  if (['npm', 'pnpm', 'yarn', 'bun'].includes(pm)) {
+    commands['Install'] = `${pm} install`;
+    try {
+      const pkg = JSON.parse(fs.readFileSync(path.join(scan.repoPath, 'package.json'), 'utf-8'));
+      if (pkg.scripts?.dev) commands['Dev'] = `${pm} run dev`;
+      if (pkg.scripts?.build) commands['Build'] = `${pm} run build`;
+      if (pkg.scripts?.test) commands['Test'] = `${pm} test`;
+      if (pkg.scripts?.lint) commands['Lint'] = `${pm} run lint`;
+      if (pkg.scripts?.start) commands['Start'] = `${pm} start`;
+    } catch { }
+  } else if (pm === 'cargo') {
+    commands['Build'] = 'cargo build';
+    commands['Test'] = 'cargo test';
+    commands['Run'] = 'cargo run';
+  } else if (pm === 'go modules') {
+    commands['Build'] = 'go build ./...';
+    commands['Test'] = 'go test ./...';
+  } else if (['pip', 'poetry', 'uv'].includes(pm)) {
+    if (pm === 'uv') {
+      commands['Install'] = 'uv sync';
+      commands['Test'] = 'uv run pytest';
+    } else if (pm === 'poetry') {
+      commands['Install'] = 'poetry install';
+      commands['Test'] = 'poetry run pytest';
+    } else {
+      commands['Install'] = 'pip install -r requirements.txt';
+      commands['Test'] = 'pytest';
+    }
+  }
+
+  return commands;
+}
+
+function inferCodeStyle(scan) {
+  const rules = [];
+  const lang = scan.primaryLanguage;
+
+  if (lang.includes('TypeScript')) {
+    rules.push('Use TypeScript with strict type checking');
+    rules.push('Prefer `interface` over `type` for object shapes');
+    rules.push('Use `const` by default, `let` when reassignment is needed');
+  } else if (lang === 'JavaScript' || lang === 'JavaScript (React)') {
+    rules.push('Use modern ES6+ syntax (arrow functions, destructuring, template literals)');
+    rules.push('Use `const` by default, `let` when reassignment is needed');
+  } else if (lang === 'Python') {
+    rules.push('Follow PEP 8 style guidelines');
+    rules.push('Use type hints for function signatures');
+    rules.push('Use f-strings for string formatting');
+  } else if (lang === 'Go') {
+    rules.push('Follow standard Go formatting (gofmt)');
+    rules.push('Handle errors explicitly — do not ignore returned errors');
+    rules.push('Use short variable declarations where appropriate');
+  } else if (lang === 'Rust') {
+    rules.push('Follow Rust naming conventions (snake_case for functions, CamelCase for types)');
+    rules.push('Prefer owned types in public APIs, borrows in internal code');
+    rules.push('Handle errors with Result/Option — avoid unwrap in production code');
+  }
+
+  if (scan.hasLinting) {
+    rules.push('Adhere to the project linter/formatter configuration');
+  }
+
+  return rules;
+}
+
+function inferConventions(scan) {
+  const convs = [];
+
+  if (scan.hasCi) convs.push('All PRs must pass CI before merging');
+  if (scan.hasTests) convs.push('Write tests for new features and bug fixes');
+  if (scan.hasContributing) convs.push('Read CONTRIBUTING.md before making changes');
+  if (scan.hasDocs) convs.push('Update documentation when changing public APIs');
+  convs.push('Keep commits focused and atomic');
+  convs.push('Write clear commit messages describing the "why"');
+
+  return convs;
+}
+
+function getLanguageRules(scan) {
+  const rules = [];
+  const lang = scan.primaryLanguage;
+
+  if (lang.includes('TypeScript') || lang.includes('React')) {
+    rules.push('Use TypeScript strict mode conventions');
+    if (lang.includes('React')) {
+      rules.push('Prefer functional components with hooks');
+      rules.push('Use descriptive component and prop names');
+    }
+  } else if (lang === 'Python') {
+    rules.push('Use type hints consistently');
+    rules.push('Prefer list comprehensions over map/filter for simple cases');
+  } else if (lang === 'Go') {
+    rules.push('Return errors instead of panicking');
+    rules.push('Keep interfaces small (1-3 methods)');
+  } else if (lang === 'Rust') {
+    rules.push('Use the type system to encode invariants');
+    rules.push('Prefer iterators over manual loops');
+  } else if (lang === 'Java') {
+    rules.push('Follow Java naming conventions');
+    rules.push('Use Optional instead of null where possible');
+  }
+
+  return rules;
+}
+
+function getFrameworkRules(scan) {
+  const rules = [];
+
+  if (scan.frameworks.includes('Next.js')) {
+    rules.push('Use App Router patterns (app/ directory)');
+    rules.push('Prefer Server Components by default, use "use client" only when needed');
+    rules.push('Use next/image for images, next/link for navigation');
+  }
+  if (scan.frameworks.includes('React') || scan.primaryLanguage.includes('React')) {
+    rules.push('Keep components small and composable');
+    rules.push('Lift state up only when necessary');
+  }
+  if (scan.frameworks.includes('Tailwind CSS')) {
+    rules.push('Use Tailwind utility classes instead of custom CSS');
+    rules.push('Extract repeated patterns into components, not CSS classes');
+  }
+  if (scan.frameworks.includes('Prisma')) {
+    rules.push('Keep Prisma schema as the source of truth for database models');
+    rules.push('Use Prisma Client for all database operations');
+  }
+  if (scan.frameworks.includes('FastAPI')) {
+    rules.push('Use Pydantic models for request/response validation');
+    rules.push('Use dependency injection for shared resources');
+  }
+  if (scan.frameworks.includes('Docker')) {
+    rules.push('Use multi-stage builds for production images');
+  }
+
+  return rules;
+}
+
+function generateBadgeMarkdown(score) {
+  const grade = score >= 90 ? 'A' : score >= 75 ? 'B' : score >= 60 ? 'C' : score >= 40 ? 'D' : 'F';
+  const color = score >= 90 ? 'brightgreen' : score >= 75 ? 'green' : score >= 60 ? 'yellow' : score >= 40 ? 'orange' : 'red';
+  return `[![AI Ready](https://img.shields.io/badge/AI%20Ready-${score}%25%20${grade}-${color}?style=flat&logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xMiAyQzYuNDggMiAyIDYuNDggMiAxMnM0LjQ4IDEwIDEwIDEwIDEwLTQuNDggMTAtMTBTMTcuNTIgMiAxMiAyem0wIDE4Yy00LjQyIDAtOC0zLjU4LTgtOHMzLjU4LTggOC04IDggMy41OCA4IDgtMy41OCA4LTggOHptLTEtNGgybC0uNS0yaDFsLjUtMmgtNGwuNSAyaDFMLDExIDh6Ii8+PC9zdmc+)](https://github.com/M3phist0s/ai-ready)`;
+}
+
+function generateConfigs(scan, score, outputDir) {
+  const generated = [];
+
+  // Generate CLAUDE.md
+  const claudeMd = generateClaudeMd(scan, score);
+  const claudePath = path.join(outputDir, 'CLAUDE.md');
+  if (!fs.existsSync(claudePath)) {
+    fs.writeFileSync(claudePath, claudeMd);
+    generated.push('CLAUDE.md');
+  }
+
+  // Generate .cursorrules
+  const cursorRules = generateCursorRules(scan, score);
+  const cursorPath = path.join(outputDir, '.cursorrules');
+  if (!fs.existsSync(cursorPath)) {
+    fs.writeFileSync(cursorPath, cursorRules);
+    generated.push('.cursorrules');
+  }
+
+  // Generate .github/copilot-instructions.md
+  const copilotInstructions = generateCopilotInstructions(scan, score);
+  const copilotDir = path.join(outputDir, '.github');
+  const copilotPath = path.join(copilotDir, 'copilot-instructions.md');
+  if (!fs.existsSync(copilotPath)) {
+    if (!fs.existsSync(copilotDir)) fs.mkdirSync(copilotDir, { recursive: true });
+    fs.writeFileSync(copilotPath, copilotInstructions);
+    generated.push('.github/copilot-instructions.md');
+  }
+
+  return generated;
+}
+
+module.exports = {
+  generateClaudeMd,
+  generateCursorRules,
+  generateCopilotInstructions,
+  generateConfigs,
+  generateBadgeMarkdown,
+};

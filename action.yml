@@ -1,0 +1,39 @@
+name: 'AI Ready'
+description: 'Score your repo AI-readiness and auto-generate config files for Claude Code, Cursor, and GitHub Copilot'
+author: 'M3phist0s'
+
+branding:
+  icon: 'cpu'
+  color: 'purple'
+
+inputs:
+  mode:
+    description: 'Run mode: "score" (score only), "generate" (generate configs), or "full" (both)'
+    required: false
+    default: 'full'
+  output-dir:
+    description: 'Directory to write generated config files'
+    required: false
+    default: '.'
+  create-pr:
+    description: 'Create a PR with generated configs (true/false)'
+    required: false
+    default: 'false'
+  badge:
+    description: 'Add AI-Ready badge to README (true/false)'
+    required: false
+    default: 'true'
+
+outputs:
+  score:
+    description: 'AI Readiness score (0-100)'
+  grade:
+    description: 'Letter grade (A/B/C/D/F)'
+  report:
+    description: 'Full JSON report'
+  files-generated:
+    description: 'Comma-separated list of generated config files'
+
+runs:
+  using: 'node20'
+  main: 'src/index.js'
